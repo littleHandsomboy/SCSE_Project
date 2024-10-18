@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import skew, kurtosis
+import scipy.stats as ss
 class DataInspection:
     def __init__(self):
         self.df = None 
@@ -109,13 +110,21 @@ class DataInspection:
     def numeric_columns(self):
         return [col for col in self.df.columns if pd.api.types.is_numeric_dtype(self.df[col])]
     def summarize_columns(self):
-        print(f"{'Variable':<15}{'Type':<10}{'Mean / Median / Mode':<20}{'Kurtosis':<10}{'Skewness':<10}")
+        print(f"{'Variable':<15}{'Type':<10}{'Mean / Median / Mode':<20}{'Kurtosis':<10}{'Skewness':<10}{'Normality':<10}")
         for col in self.df.columns:
             var_type = self.classify_variable_type(col)
             measure = self.calculate_measure(col, var_type)
             kurt = self.calculate_kurtosis(col) if var_type != 'Nominal' else 'NA'
             skewness = self.calculate_skewness(col) if var_type != 'Nominal' else 'NA'
-            print(f"{col:<15}{var_type:<10}{measure:<20}{kurt:<10}{skewness:<10}")
+            normality = self.calculate_normality(col) if var_type != 'Nominal' else 'NA'
+            print(f"{col:<15}{var_type:<10}{measure:<20}{kurt:<10}{skewness:<10}{normality:<10}")
+
+    def calculate_normality(self, col):
+        _, p_value = ss.shapiro(self.df[col])
+        if p_value > 0.05:
+            return 'Normal'
+        else:
+            return 'Not Normal'
 
     def classify_variable_type(self, col):
         if pd.api.types.is_numeric_dtype(self.df[col]):
