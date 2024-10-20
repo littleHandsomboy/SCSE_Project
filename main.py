@@ -66,7 +66,8 @@ while(True):
     2. Plot Boxplot
     3. Plot Bar Chart
     4. Plot Scatter Plot
-    5. Back to Main Menu
+    5. Plot dominant                        
+    6. Back to Main Menu
     Choose The Plot You Want to Polt: """)
             if(inspection_num == '1'):
                 analysis.ask_for_histogram()
@@ -77,7 +78,10 @@ while(True):
             elif(inspection_num == '4'):
                 analysis.ask_for_scatterplot()
             elif(inspection_num == '5'):
+                analysis.plot_dominant()
+            elif(inspection_num =='6'):
                 break
+            
             else:
                 print("Invalid input. Please choose a valid option.")
     elif(menu_num=='4'):
@@ -100,7 +104,7 @@ Welcome to Data Analysis Part:
                     data_analysis.anova_test(cont_var, cat_var)
                 else:
                     print("One or both variables are not suitable for the test.")
-
+                analysis.plot_anova_boxplot(data,cont_var,cat_var,"ANOVA/KW")
             elif analysis_num == '2':
                 data_analysis.list_suitable_variables('t-Test')
                 group1 = input("Enter the first group variable: ")
@@ -118,7 +122,7 @@ Welcome to Data Analysis Part:
                     data_analysis.chi_square_test(cat_var1, cat_var2)
                 else:
                     print("One or both variables are not suitable for the test.")
-
+                analysis.plot_categorical_variables(cat_var1,cat_var2,"Chi-Square")
             elif analysis_num == '4':
                 text_columns = data_analysis.get_text_columns()
                 print(text_columns)

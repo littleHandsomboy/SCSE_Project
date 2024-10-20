@@ -7,9 +7,11 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from textblob import TextBlob
+import numpy as np
 try:
     from transformers import pipeline
 except ImportError:
+    
     pipeline = None
 class DataAnalysis:
     def __init__(self, data):
@@ -23,7 +25,7 @@ class DataAnalysis:
                 print(var)
             print("Categorical (ordinal/nominal) variables:")
             for var in self.df.select_dtypes(include=['object']).columns:
-                if self.df[var].nunique() > 1 and self.df[var].nunique() < 10:  
+                if self.df[var].dtype == 'object' or self.df[var].nunique() < 10 or (self.df[var] % 1).eq(0).all() and self.df[var].dtype != 'object':
                     print(var)
         elif test_type == 'Regression':
             print("Continuous (interval/ratio) variables:")
@@ -32,7 +34,7 @@ class DataAnalysis:
         elif test_type == 'Chi-Square':
             print("Categorical (nominal/ordinal) variables:")
             for var in self.df.select_dtypes(include=['object']).columns:
-                if self.df[var].nunique() > 1 and self.df[var].nunique() < 10:
+                if self.df[var].dtype == 'object' or self.df[var].nunique() < 10 or (self.df[var] % 1).eq(0).all() and self.df[var].dtype != 'object':
                     print(var)
         elif test_type == 't-Test':
             print("Continuous (interval/ratio) variables:")
@@ -68,6 +70,7 @@ class DataAnalysis:
                     print("Failed to Reject Null Hypothesis: No significant difference.")
         except Exception as e:
             print("Error performing ANOVA test:", e)
+    
 
     def kruskal_wallis_test(self, continuous_var, categorical_var):
         try:
@@ -117,8 +120,11 @@ class DataAnalysis:
         try:
             X = self.df[independent_vars]
             Y = self.df[dependent_var]
-            self.check_normality(dependent_var)
-            self.check_normality(independent_vars)
+            # self.check_normality(dependent_var)
+            # self.check_normality(independent_vars)
+            self.plot_qq_histogram(dependent_var)
+            self.plot_qq_histogram(independent_vars)
+            self.plot_regression(X, Y)
             slope, intercept, r_value, p_value, std_err = ss.linregress(X, Y)
             plt.scatter(X, Y, label='Data points')
             plt.plot(X, intercept + slope*X, 'r', label='Fitted line')
@@ -126,7 +132,7 @@ class DataAnalysis:
 Intercept is : {intercept}
 R_value is : {r_value}
 Std_err is : {std_err}
-P_value is : {p_value}
+P_value is : {p_value:.10f}
 """)
             if p_value < 0.05:
                 print("Null Hypothesis Rejected: There is a significant difference.")
@@ -193,3 +199,26 @@ P_value is : {p_value}
         else:
             print("DistilBERT is not available.")
             return None, None
+    def plot_regression(self, X, Y):
+        try:
+            if isinstance(X, pd.Series):
+                X = X.values.reshape(-1, 1)
+            elif isinstance(X, pd.DataFrame) and X.shape[1] == 1:
+                X = X.values
+            model = LinearRegression()
+            model.fit(X, Y)
+            Y_pred = model.predict(X)
+            plt.figure(figsize=(10, 6))
+            plt.scatter(X, Y, color='blue', label='Actual data')
+            plt.plot(X, Y_pred, color='red', linewidth=2, label='Fitted line')
+            plt.legend()
+            plt.title('Linear Regression Plot')
+            plt.xlabel('Independent Variable(s)')
+            plt.ylabel('Dependent Variable')
+            plt.show()
+            print(f"Coefficients: {model.coef_.flatten()}")
+            print(f"Intercept: {model.intercept_}")
+            r_squared = model.score(X, Y)
+            print(f"R-squared: {r_squared}")
+        except Exception as e:
+            print("Error plotting regression:", e)

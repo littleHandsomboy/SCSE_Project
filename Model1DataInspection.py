@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import skew, kurtosis
 import scipy.stats as ss
+import seaborn as sns
 class DataInspection:
     def __init__(self):
         self.df = None 
@@ -85,8 +86,8 @@ class DataInspection:
         numeric_cols = self.numeric_columns()
         if len(numeric_cols) >= 2:
             print(f"Available numeric columns: {numeric_cols}")
-            col1 = input("Choose first column: ")
-            col2 = input("Choose second column: ")
+            col1 = input("Choose first column (use index +1):  ")
+            col2 = input("Choose second column (use index +1): ")
             self.plot_scatter(numeric_cols[int(col1)-1], numeric_cols[int(col2)-1])
 
     def ask_for_boxplot(self):
@@ -154,3 +155,36 @@ class DataInspection:
     def calculate_skewness(self, col):
         skewness = skew(self.df[col].dropna())
         return f"{skewness:.2f}"
+    def plot_dominant(self):
+        df = self.df
+        for col in self.df.columns:
+            print(col)
+        col1  =  input("Choise one for index:")
+        col2 = input("Choise one for columns:")
+        pivot_df = df.pivot_table(index=col1, columns=col2, aggfunc='size', fill_value=0)
+        
+        pivot_df.plot(kind='bar', stacked=True, figsize=(10, 6))
+        plt.title('Dominant Emotion by Gender')
+        plt.xlabel('Gender')
+        plt.ylabel('Counts')
+        plt.xticks(rotation=45)
+        plt.legend(title='Dominant Emotion')
+        plt.tight_layout()
+        plt.show()
+
+    def plot_anova_boxplot(self, data, continuous_var, categorical_var, title):
+        plt.figure(figsize=(10, 6))
+        sns.boxplot(x=categorical_var, y=continuous_var, data=data)
+        plt.title(title)
+        plt.xticks(rotation=45)
+        plt.tight_layout()  
+        plt.show()
+    def plot_categorical_variables(self, category1, category2, title):
+
+        plt.figure(figsize=(10, 6))
+        sns.countplot(x=category1, hue=category2, data=self.df, palette='viridis')
+        plt.title(title)
+        plt.xlabel(category1)
+        plt.ylabel('Count')
+        plt.legend(title=category2)
+        plt.show()
